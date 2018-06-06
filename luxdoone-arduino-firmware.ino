@@ -9,27 +9,17 @@ boolean stringComplete = false;  // whether the string is complete
 int BAUDRATE = 9600;
 
 //RELAYS
-int  output01 = 2; //0
-int  output02 = 3; //1
-int  output03 = 4; //2
-int  output04 = 5; //3
-
-int  output05 = 6; //4
-int  output06 = 7; //5
-int  output07 = 8; //6
-int  output08 = 9; //7
+int  output01 = 4; //0
+int  output02 = 5; //1
+int  output03 = 6; //2
+int  output04 = 7; //3
 
 
 int relays[] = {
 	output01,
 	output02,
 	output03,
-	output04,
-
-	output05,
-	output06,
-	output07,
-	output08,
+	output04
 };
 
 
@@ -58,6 +48,7 @@ void loop() {
 	if (stringComplete) {
 
 		//{"deviceId":"0013A200_40EAE365","relay":1,"instruction":0}
+		//{"id":"0013A200_40EAE365","rel":0,"ins":1,"typ":0}
 		StaticJsonBuffer<100> jsonBuffer;
 		JsonObject& root = jsonBuffer.parseObject(inputString);
 		String id = root["id"];
@@ -112,7 +103,7 @@ void loop() {
 			case 2: pulseDeviceOrder(relay); break;
 		}
 		
-		sendResponse(relay, instruction);
+		sendResponse(relay, instruction, type);
 	}
 	delay(100);
 }
@@ -127,13 +118,14 @@ void pulseDeviceOrder(int relay) {
 	digitalWrite(relays[relay], false);
 }
 
-void sendResponse(int relay, int state) {
+void sendResponse(int relay, int state, int type) {
 	StaticJsonBuffer<200> jsonBuff;
 
 	JsonObject& root = jsonBuff.createObject();
-	root["deviceId"] = deviceId;
-	root["relay"] = relay;
-	root["state"] = state;
+	root["id"] = deviceId;
+	root["rel"] = relay;
+	root["ins"] = state;
+	root["typ"] = type;
 
 	root.printTo(Serial);
 }
@@ -152,7 +144,7 @@ void serialEvent() {
 		inputString += inChar;
 		// if the incoming character is a newline, set a flag
 		// so the main loop can do something about it:
-		if (inChar == '\n') {
+		if (inChar == '?') {
 			stringComplete = true;
 		}
 	}
